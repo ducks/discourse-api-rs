@@ -117,13 +117,36 @@ pub struct CategoryListData {
 pub struct ChatChannel {
     pub id: u64,
     pub title: String,
-    pub slug: String,
+    #[serde(default)]
+    pub slug: Option<String>,
     #[serde(default)]
     pub description: Option<String>,
+    #[serde(default)]
     pub chatable_id: Option<u64>,
+    #[serde(default)]
     pub chatable_type: Option<String>,
+    #[serde(default)]
     pub memberships_count: Option<u32>,
+    #[serde(default)]
     pub status: Option<String>,
+    #[serde(default)]
+    pub allow_channel_wide_mentions: Option<bool>,
+    #[serde(default)]
+    pub chatable: Option<serde_json::Value>,
+    #[serde(default)]
+    pub chatable_url: Option<String>,
+    #[serde(default)]
+    pub current_user_membership: Option<serde_json::Value>,
+    #[serde(default)]
+    pub icon_upload_url: Option<String>,
+    #[serde(default)]
+    pub last_message: Option<serde_json::Value>,
+    #[serde(default)]
+    pub meta: Option<serde_json::Value>,
+    #[serde(default)]
+    pub threading_enabled: Option<bool>,
+    #[serde(default)]
+    pub unicode_title: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -132,6 +155,14 @@ pub struct ChatChannelsResponse {
     pub direct_message_channels: Option<Vec<ChatChannel>>,
     #[serde(default)]
     pub channels: Vec<ChatChannel>,
+    #[serde(default)]
+    pub meta: Option<serde_json::Value>,
+    #[serde(default)]
+    pub tracking: Option<serde_json::Value>,
+    #[serde(default)]
+    pub global_presence_channel_state: Option<serde_json::Value>,
+    #[serde(default)]
+    pub unread_thread_overview: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
