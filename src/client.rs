@@ -103,7 +103,7 @@ impl DiscourseClient {
         &self,
         channel_id: u64,
         message: &str,
-    ) -> Result<serde_json::Value> {
+    ) -> Result<CreateMessageResponse> {
         let url = self.build_url(&format!("/chat/api/channels/{}/messages", channel_id));
         let mut request = self.add_auth_headers(self.client.post(&url));
         let body = serde_json::json!({
@@ -111,7 +111,7 @@ impl DiscourseClient {
         });
         request = request.json(&body);
         let response = request.send().await?;
-        let data: serde_json::Value = response.json().await?;
+        let data: CreateMessageResponse = response.json().await?;
         Ok(data)
     }
 }
