@@ -159,3 +159,21 @@ pub struct CreateMessageResponse {
     pub success: String,
     pub message_id: u64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreatePostResponse {
+    pub id: u64,
+    pub name: Option<String>,
+    pub username: String,
+    pub avatar_template: String,
+    pub created_at: String,
+    pub cooked: String,
+    pub post_number: u32,
+    pub post_type: u32,
+    pub updated_at: String,
+    pub reply_count: u32,
+    pub reply_to_post_number: Option<u32>,
+    pub quote_count: u32,
+    pub topic_id: u64,
+    pub topic_slug: String,
+}

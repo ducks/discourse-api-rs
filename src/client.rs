@@ -114,4 +114,25 @@ impl DiscourseClient {
         let data: CreateMessageResponse = response.json().await?;
         Ok(data)
     }
+
+    pub async fn create_post(
+        &self,
+        topic_id: u64,
+        raw: &str,
+        reply_to_post_number: Option<u32>,
+    ) -> Result<CreatePostResponse> {
+        let url = self.build_url("/posts.json");
+        let mut request = self.add_auth_headers(self.client.post(&url));
+        let mut body = serde_json::json!({
+            "raw": raw,
+            "topic_id": topic_id,
+        });
+        if let Some(reply_to) = reply_to_post_number {
+            body["reply_to_post_number"] = serde_json::json!(reply_to);
+        }
+        request = request.json(&body);
+        let response = request.send().await?;
+        let data: CreatePostResponse = response.json().await?;
+        Ok(data)
+    }
 }
