@@ -184,3 +184,40 @@ pub struct CreatePostResponse {
     pub topic_id: u64,
     pub topic_slug: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Notification {
+    pub id: u64,
+    pub user_id: u64,
+    pub notification_type: u32,
+    pub read: bool,
+    pub high_priority: bool,
+    pub created_at: String,
+    pub post_number: Option<u32>,
+    pub topic_id: Option<u64>,
+    pub slug: Option<String>,
+    pub fancy_title: Option<String>,
+    #[serde(default)]
+    pub data: NotificationData,
+    #[serde(default)]
+    pub acting_user_avatar_template: Option<String>,
+    #[serde(default)]
+    pub acting_user_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NotificationData {
+    #[serde(default)]
+    pub topic_title: Option<String>,
+    #[serde(default)]
+    pub original_username: Option<String>,
+    #[serde(default)]
+    pub display_username: Option<String>,
+    #[serde(default)]
+    pub display_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationsResponse {
+    pub notifications: Vec<Notification>,
+}
