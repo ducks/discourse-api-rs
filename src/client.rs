@@ -187,4 +187,11 @@ impl DiscourseClient {
         let response = request.send().await?;
         self.handle_response(response).await
     }
+
+    pub async fn get_notifications(&self) -> Result<NotificationsResponse> {
+        let url = self.build_url("/notifications.json");
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
 }
