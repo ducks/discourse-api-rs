@@ -57,6 +57,8 @@ pub struct Post {
     pub username: String,
     pub created_at: String,
     pub cooked: String,
+    #[serde(default)]
+    pub raw: Option<String>,
     pub post_number: u32,
     pub post_type: u32,
     pub reply_count: u32,
