@@ -1,6 +1,13 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ErrorResponse {
+    pub errors: Vec<String>,
+    #[serde(default)]
+    pub error_type: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Topic {
     pub id: u64,
     pub title: String,
