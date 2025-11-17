@@ -82,4 +82,36 @@ impl DiscourseClient {
         let data: LatestResponse = response.json().await?;
         Ok(data)
     }
+
+    pub async fn get_user_channels(&self) -> Result<ChatChannelsResponse> {
+        let url = self.build_url("/chat/api/me/channels");
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        let data: ChatChannelsResponse = response.json().await?;
+        Ok(data)
+    }
+
+    pub async fn get_channel_messages(&self, channel_id: u64) -> Result<ChatMessagesResponse> {
+        let url = self.build_url(&format!("/chat/api/channels/{}/messages", channel_id));
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        let data: ChatMessagesResponse = response.json().await?;
+        Ok(data)
+    }
+
+    pub async fn send_chat_message(
+        &self,
+        channel_id: u64,
+        message: &str,
+    ) -> Result<serde_json::Value> {
+        let url = self.build_url(&format!("/chat/api/channels/{}/messages", channel_id));
+        let mut request = self.add_auth_headers(self.client.post(&url));
+        let body = serde_json::json!({
+            "message": message,
+        });
+        request = request.json(&body);
+        let response = request.send().await?;
+        let data: serde_json::Value = response.json().await?;
+        Ok(data)
+    }
 }

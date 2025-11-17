@@ -99,3 +99,51 @@ pub struct CategoryList {
 pub struct CategoryListData {
     pub categories: Vec<Category>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatChannel {
+    pub id: u64,
+    pub title: String,
+    pub slug: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    pub chatable_id: Option<u64>,
+    pub chatable_type: Option<String>,
+    pub memberships_count: Option<u32>,
+    pub status: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatChannelsResponse {
+    pub public_channels: Option<Vec<ChatChannel>>,
+    pub direct_message_channels: Option<Vec<ChatChannel>>,
+    #[serde(default)]
+    pub channels: Vec<ChatChannel>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatMessage {
+    pub id: u64,
+    pub message: String,
+    pub cooked: String,
+    pub created_at: String,
+    pub user: User,
+    pub chat_channel_id: u64,
+    #[serde(default)]
+    pub deleted_at: Option<String>,
+    #[serde(default)]
+    pub excerpt: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatMessagesResponse {
+    pub messages: Vec<ChatMessage>,
+    #[serde(default)]
+    pub meta: ChatMessagesMeta,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ChatMessagesMeta {
+    pub can_load_more_past: Option<bool>,
+    pub can_load_more_future: Option<bool>,
+}
