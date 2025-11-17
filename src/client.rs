@@ -104,7 +104,7 @@ impl DiscourseClient {
         channel_id: u64,
         message: &str,
     ) -> Result<CreateMessageResponse> {
-        let url = self.build_url(&format!("/chat/api/channels/{}/messages", channel_id));
+        let url = self.build_url(&format!("/chat/{}", channel_id));
         let mut request = self.add_auth_headers(self.client.post(&url));
         let body = serde_json::json!({
             "message": message,
