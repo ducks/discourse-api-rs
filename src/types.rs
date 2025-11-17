@@ -76,7 +76,7 @@ pub struct Post {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
-    pub id: u64,
+    pub id: i64,
     pub username: String,
     pub name: Option<String>,
     pub avatar_template: String,
