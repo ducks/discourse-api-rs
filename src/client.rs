@@ -60,7 +60,7 @@ impl DiscourseClient {
     }
 
     pub async fn get_topic(&self, topic_id: u64) -> Result<TopicResponse> {
-        let url = self.build_url(&format!("/t/{}.json", topic_id));
+        let url = self.build_url(&format!("/t/{}.json?include_raw=1", topic_id));
         let request = self.add_auth_headers(self.client.get(&url));
         let response = request.send().await?;
         let data: TopicResponse = response.json().await?;
