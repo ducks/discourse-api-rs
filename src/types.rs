@@ -153,3 +153,9 @@ pub struct ChatMessagesMeta {
     pub can_load_more_past: Option<bool>,
     pub can_load_more_future: Option<bool>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateMessageResponse {
+    pub success: String,
+    pub message_id: u64,
+}
