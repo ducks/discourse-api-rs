@@ -22,8 +22,14 @@ pub struct Topic {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Poster {
-    pub user_id: u64,
+    pub user_id: i64,
     pub description: String,
+    #[serde(default)]
+    pub extras: Option<String>,
+    #[serde(default)]
+    pub primary_group_id: Option<u64>,
+    #[serde(default)]
+    pub flair_group_id: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
