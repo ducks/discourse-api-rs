@@ -54,14 +54,18 @@ pub struct TopicList {
 pub struct TopicResponse {
     pub post_stream: PostStream,
     pub id: u64,
-    pub title: String,
-    pub posts_count: u32,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub posts_count: Option<u32>,
     pub category_id: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostStream {
     pub posts: Vec<Post>,
+    #[serde(default)]
+    pub stream: Vec<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
