@@ -104,7 +104,11 @@ impl DiscourseClient {
     }
 
     pub async fn get_latest(&self) -> Result<LatestResponse> {
-        let url = self.build_url("/latest.json");
+        self.get_latest_page(0).await
+    }
+
+    pub async fn get_latest_page(&self, page: u32) -> Result<LatestResponse> {
+        let url = self.build_url(&format!("/latest.json?page={}", page));
         let request = self.add_auth_headers(self.client.get(&url));
         let response = request.send().await?;
         self.handle_response(response).await
@@ -119,7 +123,29 @@ impl DiscourseClient {
     }
 
     pub async fn get_topic(&self, topic_id: u64) -> Result<TopicResponse> {
-        let url = self.build_url(&format!("/t/{}.json?include_raw=1", topic_id));
+        self.get_topic_from_post(topic_id, None).await
+    }
+
+    pub async fn get_topic_from_post(&self, topic_id: u64, after_post_number: Option<u32>) -> Result<TopicResponse> {
+        let url = if let Some(post_num) = after_post_number {
+            format!("/t/{}/{}.json?include_raw=1", topic_id, post_num)
+        } else {
+            format!("/t/{}.json?include_raw=1", topic_id)
+        };
+        let url = self.build_url(&url);
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn get_topic_posts(&self, topic_id: u64, post_ids: Option<Vec<u64>>) -> Result<TopicResponse> {
+        let mut url = format!("/t/{}/posts.json?include_raw=1", topic_id);
+        if let Some(ids) = post_ids {
+            for id in ids {
+                url.push_str(&format!("&post_ids[]={}", id));
+            }
+        }
+        let url = self.build_url(&url);
         let request = self.add_auth_headers(self.client.get(&url));
         let response = request.send().await?;
         self.handle_response(response).await
