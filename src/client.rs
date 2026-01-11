@@ -194,6 +194,25 @@ impl DiscourseClient {
         self.handle_response(response).await
     }
 
+    pub async fn create_topic(
+        &self,
+        title: &str,
+        raw: &str,
+        category_id: Option<u64>,
+    ) -> Result<CreatePostResponse> {
+        let url = self.build_url("/posts.json");
+        let request = self.add_auth_headers(self.client.post(&url));
+        let mut body = serde_json::json!({
+            "title": title,
+            "raw": raw,
+        });
+        if let Some(cat_id) = category_id {
+            body["category"] = serde_json::json!(cat_id);
+        }
+        let response = request.json(&body).send().await?;
+        self.handle_response(response).await
+    }
+
     pub async fn create_post(
         &self,
         topic_id: u64,
@@ -212,6 +231,62 @@ impl DiscourseClient {
         request = request.json(&body);
         let response = request.send().await?;
         self.handle_response(response).await
+    }
+
+    pub async fn update_post(&self, post_id: u64, raw: &str) -> Result<()> {
+        let url = self.build_url(&format!("/posts/{}.json", post_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let body = serde_json::json!({
+            "post": {
+                "raw": raw,
+            }
+        });
+        let response = request.json(&body).send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn delete_post(&self, post_id: u64) -> Result<()> {
+        let url = self.build_url(&format!("/posts/{}.json", post_id));
+        let request = self.add_auth_headers(self.client.delete(&url));
+        let response = request.send().await?;
+        let status = response.status();
+        if !status.is_success() {
+            if let Ok(error_response) = response.json::<crate::types::ErrorResponse>().await {
+                return Err(crate::error::Error::Api(error_response.errors.join(", ")));
+            }
+            return Err(crate::error::Error::Api(format!("HTTP {}", status)));
+        }
+        Ok(())
+    }
+
+    pub async fn like_post(&self, post_id: u64) -> Result<()> {
+        let url = self.build_url(&format!("/post_actions"));
+        let request = self.add_auth_headers(self.client.post(&url));
+        let body = serde_json::json!({
+            "id": post_id,
+            "post_action_type_id": 2,
+        });
+        let response = request.json(&body).send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn unlike_post(&self, post_id: u64) -> Result<()> {
+        let url = self.build_url(&format!("/post_actions/{}", post_id));
+        let request = self.add_auth_headers(self.client.delete(&url));
+        let response = request
+            .query(&[("post_action_type_id", "2")])
+            .send()
+            .await?;
+        let status = response.status();
+        if !status.is_success() {
+            if let Ok(error_response) = response.json::<crate::types::ErrorResponse>().await {
+                return Err(crate::error::Error::Api(error_response.errors.join(", ")));
+            }
+            return Err(crate::error::Error::Api(format!("HTTP {}", status)));
+        }
+        Ok(())
     }
 
     pub async fn get_notifications(&self) -> Result<NotificationsResponse> {
