@@ -40,9 +40,20 @@ impl WasmDiscourseClient {
 
     #[wasm_bindgen(js_name = getTopic)]
     pub async fn get_topic(&self, topic_id: u64) -> Result<JsValue, JsValue> {
-        self.inner
+        #[cfg(target_arch = "wasm32")]
+        web_sys::console::log_1(&format!("WASM: getTopic called for topic_id {}", topic_id).into());
+
+        let result = self.inner
             .get_topic(topic_id)
-            .await
+            .await;
+
+        #[cfg(target_arch = "wasm32")]
+        match &result {
+            Ok(_) => web_sys::console::log_1(&"WASM: getTopic succeeded".into()),
+            Err(e) => web_sys::console::error_1(&format!("WASM: getTopic failed: {:?}", e).into()),
+        }
+
+        result
             .map(|r| serde_wasm_bindgen::to_value(&r).unwrap())
             .map_err(|e| JsValue::from_str(&format!("{:?}", e)))
     }

@@ -10,6 +10,8 @@ pkgs.mkShell {
     clippy
     pkg-config
     openssl
+    wasm-pack
+    lld
   ];
 
   shellHook = ''
