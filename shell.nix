@@ -12,6 +12,7 @@ pkgs.mkShell {
     openssl
     wasm-pack
     lld
+    nodejs_22
   ];
 
   shellHook = ''
