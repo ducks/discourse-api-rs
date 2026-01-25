@@ -261,7 +261,7 @@ impl DiscourseClient {
     }
 
     pub async fn like_post(&self, post_id: u64) -> Result<()> {
-        let url = self.build_url(&format!("/post_actions"));
+        let url = self.build_url("/post_actions");
         let request = self.add_auth_headers(self.client.post(&url));
         let body = serde_json::json!({
             "id": post_id,
