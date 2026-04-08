@@ -295,4 +295,319 @@ impl DiscourseClient {
         let response = request.send().await?;
         self.handle_response(response).await
     }
+
+    // -- Users --
+
+    pub async fn get_user(&self, username: &str) -> Result<UserResponse> {
+        let url = self.build_url(&format!("/users/{}.json", username));
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn get_user_by_external_id(&self, external_id: &str) -> Result<UserResponse> {
+        let url = self.build_url(&format!("/users/by-external/{}.json", external_id));
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn create_user(
+        &self,
+        name: &str,
+        email: &str,
+        password: &str,
+        username: &str,
+    ) -> Result<CreateUserResponse> {
+        let url = self.build_url("/users.json");
+        let request = self.add_auth_headers(self.client.post(&url));
+        let body = serde_json::json!({
+            "name": name,
+            "email": email,
+            "password": password,
+            "username": username,
+            "active": true,
+            "approved": true,
+        });
+        let response = request.json(&body).send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn update_user(
+        &self,
+        username: &str,
+        params: serde_json::Value,
+    ) -> Result<UserResponse> {
+        let url = self.build_url(&format!("/u/{}.json", username));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.json(&params).send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn list_users(&self, list_type: &str) -> Result<Vec<UserListItem>> {
+        let url = self.build_url(&format!("/admin/users/list/{}.json", list_type));
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn suspend_user(
+        &self,
+        user_id: i64,
+        duration: u32,
+        reason: &str,
+    ) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/suspend.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let body = serde_json::json!({
+            "suspend_until": format!("{}d", duration),
+            "reason": reason,
+        });
+        let response = request.json(&body).send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn unsuspend_user(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/unsuspend.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn delete_user(&self, user_id: i64, delete_posts: bool) -> Result<()> {
+        let url = self.build_url(&format!(
+            "/admin/users/{}.json?delete_posts={}",
+            user_id, delete_posts
+        ));
+        let request = self.add_auth_headers(self.client.delete(&url));
+        let response = request.send().await?;
+        let status = response.status();
+        if !status.is_success() {
+            if let Ok(error_response) = response.json::<ErrorResponse>().await {
+                return Err(crate::error::Error::Api(error_response.errors.join(", ")));
+            }
+            return Err(crate::error::Error::Api(format!("HTTP {}", status)));
+        }
+        Ok(())
+    }
+
+    pub async fn grant_admin(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/grant_admin.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn revoke_admin(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/revoke_admin.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn grant_moderation(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/grant_moderation.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn revoke_moderation(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/revoke_moderation.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn update_username(&self, username: &str, new_username: &str) -> Result<()> {
+        let url = self.build_url(&format!("/u/{}/preferences/username.json", username));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let body = serde_json::json!({ "new_username": new_username });
+        let response = request.json(&body).send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn update_email(&self, username: &str, email: &str) -> Result<()> {
+        let url = self.build_url(&format!("/u/{}/preferences/email.json", username));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let body = serde_json::json!({ "email": email });
+        let response = request.json(&body).send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn check_username(&self, username: &str) -> Result<UsernameCheckResponse> {
+        let url = self.build_url(&format!("/users/check_username.json?username={}", username));
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn activate_user(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/activate.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn deactivate_user(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/deactivate.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn update_trust_level(&self, user_id: i64, level: u32) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/trust_level.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let body = serde_json::json!({ "level": level });
+        let response = request.json(&body).send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn log_out_user(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/log_out.json", user_id));
+        let request = self.add_auth_headers(self.client.post(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    pub async fn anonymize_user(&self, user_id: i64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/users/{}/anonymize.json", user_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.send().await?;
+        let _: serde_json::Value = self.handle_response(response).await?;
+        Ok(())
+    }
+
+    // -- Groups --
+
+    pub async fn get_groups(&self) -> Result<GroupsResponse> {
+        let url = self.build_url("/groups.json");
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn get_group(&self, group_name: &str) -> Result<GroupResponse> {
+        let url = self.build_url(&format!("/groups/{}.json", group_name));
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn create_group(
+        &self,
+        name: &str,
+        params: serde_json::Value,
+    ) -> Result<GroupResponse> {
+        let url = self.build_url("/admin/groups.json");
+        let request = self.add_auth_headers(self.client.post(&url));
+        let mut body = params;
+        body["group"]["name"] = serde_json::json!(name);
+        let response = request.json(&body).send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn delete_group(&self, group_id: u64) -> Result<()> {
+        let url = self.build_url(&format!("/admin/groups/{}.json", group_id));
+        let request = self.add_auth_headers(self.client.delete(&url));
+        let response = request.send().await?;
+        let status = response.status();
+        if !status.is_success() {
+            if let Ok(error_response) = response.json::<ErrorResponse>().await {
+                return Err(crate::error::Error::Api(error_response.errors.join(", ")));
+            }
+            return Err(crate::error::Error::Api(format!("HTTP {}", status)));
+        }
+        Ok(())
+    }
+
+    pub async fn get_group_members(
+        &self,
+        group_name: &str,
+    ) -> Result<GroupMembersResponse> {
+        let url = self.build_url(&format!("/groups/{}/members.json", group_name));
+        let request = self.add_auth_headers(self.client.get(&url));
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn add_group_members(
+        &self,
+        group_id: u64,
+        usernames: &[&str],
+    ) -> Result<GroupModifyMembersResponse> {
+        let url = self.build_url(&format!("/admin/groups/{}/members.json", group_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let body = serde_json::json!({
+            "usernames": usernames.join(","),
+        });
+        let response = request.json(&body).send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn remove_group_members(
+        &self,
+        group_id: u64,
+        usernames: &[&str],
+    ) -> Result<GroupModifyMembersResponse> {
+        let url = self.build_url(&format!("/admin/groups/{}/members.json", group_id));
+        let request = self.add_auth_headers(self.client.delete(&url));
+        let body = serde_json::json!({
+            "usernames": usernames.join(","),
+        });
+        let response = request.json(&body).send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn update_group(
+        &self,
+        group_id: u64,
+        params: serde_json::Value,
+    ) -> Result<GroupResponse> {
+        let url = self.build_url(&format!("/groups/{}.json", group_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let response = request.json(&params).send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn add_group_owners(
+        &self,
+        group_id: u64,
+        usernames: &[&str],
+    ) -> Result<GroupModifyMembersResponse> {
+        let url = self.build_url(&format!("/admin/groups/{}/owners.json", group_id));
+        let request = self.add_auth_headers(self.client.put(&url));
+        let body = serde_json::json!({
+            "usernames": usernames.join(","),
+        });
+        let response = request.json(&body).send().await?;
+        self.handle_response(response).await
+    }
+
+    pub async fn remove_group_owners(
+        &self,
+        group_id: u64,
+        usernames: &[&str],
+    ) -> Result<GroupModifyMembersResponse> {
+        let url = self.build_url(&format!("/admin/groups/{}/owners.json", group_id));
+        let request = self.add_auth_headers(self.client.delete(&url));
+        let body = serde_json::json!({
+            "usernames": usernames.join(","),
+        });
+        let response = request.json(&body).send().await?;
+        self.handle_response(response).await
+    }
 }
