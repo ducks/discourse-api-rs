@@ -256,3 +256,179 @@ pub struct NotificationData {
 pub struct NotificationsResponse {
     pub notifications: Vec<Notification>,
 }
+
+// -- Users --
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserResponse {
+    pub user: UserDetails,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserDetails {
+    pub id: i64,
+    pub username: String,
+    #[serde(default)]
+    pub name: Option<String>,
+    pub avatar_template: String,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub bio_raw: Option<String>,
+    #[serde(default)]
+    pub bio_cooked: Option<String>,
+    #[serde(default)]
+    pub website: Option<String>,
+    #[serde(default)]
+    pub location: Option<String>,
+    #[serde(default)]
+    pub admin: Option<bool>,
+    #[serde(default)]
+    pub moderator: Option<bool>,
+    #[serde(default)]
+    pub trust_level: Option<u32>,
+    pub created_at: String,
+    #[serde(default)]
+    pub last_seen_at: Option<String>,
+    #[serde(default)]
+    pub groups: Vec<UserGroup>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserGroup {
+    pub id: u64,
+    pub name: String,
+    #[serde(default)]
+    pub display_name: Option<String>,
+    #[serde(default)]
+    pub flair_url: Option<String>,
+    #[serde(default)]
+    pub flair_bg_color: Option<String>,
+    #[serde(default)]
+    pub flair_color: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserListResponse {
+    #[serde(flatten)]
+    pub data: Vec<UserListItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserListItem {
+    pub id: i64,
+    pub username: String,
+    #[serde(default)]
+    pub name: Option<String>,
+    pub avatar_template: String,
+    #[serde(default)]
+    pub admin: Option<bool>,
+    #[serde(default)]
+    pub moderator: Option<bool>,
+    #[serde(default)]
+    pub trust_level: Option<u32>,
+    #[serde(default)]
+    pub active: Option<bool>,
+    #[serde(default)]
+    pub staged: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateUserResponse {
+    pub success: bool,
+    pub active: bool,
+    pub message: String,
+    #[serde(default)]
+    pub user_id: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UsernameCheckResponse {
+    pub available: bool,
+    #[serde(default)]
+    pub suggestion: Option<String>,
+}
+
+// -- Groups --
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Group {
+    pub id: u64,
+    pub name: String,
+    #[serde(default)]
+    pub display_name: Option<String>,
+    #[serde(default)]
+    pub full_name: Option<String>,
+    #[serde(default)]
+    pub user_count: Option<u32>,
+    #[serde(default)]
+    pub mentionable_level: Option<u32>,
+    #[serde(default)]
+    pub messageable_level: Option<u32>,
+    #[serde(default)]
+    pub visibility_level: Option<u32>,
+    #[serde(default)]
+    pub automatic: Option<bool>,
+    #[serde(default)]
+    pub bio_raw: Option<String>,
+    #[serde(default)]
+    pub bio_cooked: Option<String>,
+    #[serde(default)]
+    pub flair_url: Option<String>,
+    #[serde(default)]
+    pub flair_bg_color: Option<String>,
+    #[serde(default)]
+    pub flair_color: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GroupsResponse {
+    pub groups: Vec<Group>,
+    #[serde(default)]
+    pub total_rows_groups: Option<u32>,
+    #[serde(default)]
+    pub load_more_groups: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GroupResponse {
+    pub group: Group,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GroupMembersResponse {
+    pub members: Vec<GroupMember>,
+    pub owners: Vec<GroupMember>,
+    pub meta: GroupMembersMeta,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GroupMember {
+    pub id: i64,
+    pub username: String,
+    #[serde(default)]
+    pub name: Option<String>,
+    pub avatar_template: String,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub last_seen_at: Option<String>,
+    #[serde(default)]
+    pub added_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GroupMembersMeta {
+    pub total: u32,
+    #[serde(default)]
+    pub limit: Option<u32>,
+    #[serde(default)]
+    pub offset: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GroupModifyMembersResponse {
+    pub success: String,
+    #[serde(default)]
+    pub usernames: Vec<String>,
+}
