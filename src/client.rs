@@ -114,6 +114,29 @@ impl DiscourseClient {
         self.handle_response(response).await
     }
 
+    /// Full-page search.
+    ///
+    /// The term is passed as a query parameter rather than interpolated so
+    /// that spaces and Discourse's own filter syntax (`#category`,
+    /// `@username`, `in:title`) survive intact.
+    ///
+    /// Core rejects a term shorter than `min_search_term_length` with a 400,
+    /// so short queries surface as an API error rather than an empty result.
+    pub async fn search(&self, term: &str) -> Result<SearchResponse> {
+        self.search_page(term, 0).await
+    }
+
+    /// One page of search results. Pages are 1-based in core; page 0 and
+    /// page 1 both return the first page.
+    pub async fn search_page(&self, term: &str, page: u32) -> Result<SearchResponse> {
+        let url = self.build_url("/search.json");
+        let request = self
+            .add_auth_headers(self.client.get(&url))
+            .query(&[("q", term), ("page", &page.to_string())]);
+        let response = request.send().await?;
+        self.handle_response(response).await
+    }
+
     pub async fn get_categories(&self) -> Result<Vec<Category>> {
         let url = self.build_url("/categories.json");
         let request = self.add_auth_headers(self.client.get(&url));

@@ -156,6 +156,136 @@ pub struct User {
     pub avatar_template: String,
 }
 
+/// A post as `/search.json` returns it.
+///
+/// Deliberately not [`Post`]: `SearchPostSerializer` sets
+/// `include_cooked?` to false, so search hits carry a `blurb` excerpt and no
+/// rendered body at all. They also reference their topic by id only, with
+/// the titles arriving alongside in [`SearchResponse::topics`].
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchPost {
+    pub id: u64,
+    pub username: String,
+    /// Empty string for users with no display name, and null for some
+    /// system accounts.
+    #[serde(default)]
+    pub name: Option<String>,
+    pub created_at: String,
+    pub post_number: u32,
+    pub topic_id: u64,
+    /// The matched excerpt, with the search term marked up. Absent when the
+    /// server has no result context to build one from.
+    #[serde(default)]
+    pub blurb: Option<String>,
+    #[serde(default)]
+    pub like_count: u32,
+}
+
+/// A topic as `/search.json` returns it.
+///
+/// Search sends a narrower topic than the topic list does: no `views`,
+/// `posters`, `like_count`, or `has_summary`, so [`Topic`] cannot be reused
+/// here without every search failing to parse.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchTopic {
+    pub id: u64,
+    pub title: String,
+    #[serde(default)]
+    pub fancy_title: Option<String>,
+    pub slug: String,
+    #[serde(default)]
+    pub posts_count: u32,
+    #[serde(default)]
+    pub reply_count: u32,
+    pub created_at: String,
+    #[serde(default)]
+    pub category_id: Option<u64>,
+    #[serde(default)]
+    pub closed: bool,
+    #[serde(default)]
+    pub archived: bool,
+    /// Objects rather than bare names: search sends `{id, name, slug}` per
+    /// tag, unlike some other endpoints.
+    #[serde(default)]
+    pub tags: Vec<SearchTag>,
+}
+
+/// A tag as it appears on a search result topic.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchTag {
+    pub id: u64,
+    pub name: String,
+    #[serde(default)]
+    pub slug: Option<String>,
+}
+
+/// Paging and status for a search, nested under `grouped_search_result`
+/// rather than sent at the top level.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct GroupedSearchResult {
+    #[serde(default)]
+    pub term: String,
+    /// Only ever set by *header* search (the quick dropdown), where core
+    /// sets `@more_#{type}` in `GroupedSearchResults#add`. A full-page
+    /// search through `/search.json` leaves these null however many results
+    /// it returns, so do not read paging from them.
+    #[serde(default)]
+    pub more_posts: Option<bool>,
+    #[serde(default)]
+    pub more_users: Option<bool>,
+    #[serde(default)]
+    pub more_categories: Option<bool>,
+    /// The one paging flag a full-page search actually sets: core flips it
+    /// when a result type fills `Search.per_filter`.
+    #[serde(default)]
+    pub more_full_page_results: Option<bool>,
+    /// Set when the server rejected the search, e.g. a term below
+    /// `min_search_term_length`.
+    #[serde(default)]
+    pub error: Option<String>,
+    #[serde(default)]
+    pub post_ids: Vec<u64>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SearchResponse {
+    #[serde(default)]
+    pub posts: Vec<SearchPost>,
+    /// Topics for the hits above, to be joined on `topic_id`. Absent
+    /// entirely when nothing matched.
+    #[serde(default)]
+    pub topics: Vec<SearchTopic>,
+    #[serde(default)]
+    pub users: Vec<User>,
+    #[serde(default)]
+    pub categories: Vec<Category>,
+    #[serde(default)]
+    pub grouped_search_result: GroupedSearchResult,
+}
+
+impl SearchResponse {
+    /// The topic a hit belongs to, if the server sent it.
+    pub fn topic_for(&self, post: &SearchPost) -> Option<&SearchTopic> {
+        self.topics.iter().find(|t| t.id == post.topic_id)
+    }
+
+    /// Whether the search matched nothing at all.
+    pub fn is_empty(&self) -> bool {
+        self.posts.is_empty() && self.topics.is_empty()
+    }
+
+    /// Whether another page is available.
+    ///
+    /// Reads `more_full_page_results` only. `more_posts` looks like the
+    /// obvious field but core never writes it for a full-page search, so
+    /// trusting it would report "no more results" on every query.
+    pub fn has_more(&self) -> bool {
+        self.grouped_search_result
+            .more_full_page_results
+            .unwrap_or(false)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Category {
     pub id: u64,
